@@ -1,6 +1,3 @@
-
-
-
 import { languageModels } from "@/content-script/components/QueryBox/consts";
 import {
   Container,
@@ -46,41 +43,44 @@ export default function useThreadMessageStickyToolbarObserver({
 
         const $messageBlocks = UiUtils.getMessageBlocks();
 
-        $messageBlocks.forEach(({ $query, $messageBlock, $answer }, index) => {
-          queueMicrotask(() => {
-            $($query[0]).addClass("tw-relative");
+        $messageBlocks.forEach(
+          ({ $query, $messageBlock, $answer, $answerHeading }, index) => {
+            queueMicrotask(() => {
+              $($query[0]).addClass("tw-relative");
 
-            let $container = $messageBlock.find(
-              ".thread-message-toolbar-container",
-            );
-
-            if (!$container.length) {
-              $container = $("<div>").addClass(
-                `thread-message-toolbar-container tw-sticky tw-top-[3.35rem] tw-z-[9] tw-mt-4 !tw-h-[3.125rem] tw-w-full`,
+              let $container = $messageBlock.find(
+                ".thread-message-toolbar-container",
               );
-              $($query[0]).before($container);
-            }
 
-            newContainers.push({
-              container: $container[0],
-              query: $query[0],
-              messageBlock: $messageBlock[0],
-              answer: $answer[0],
+              if (!$container.length) {
+                $container = $("<div>").addClass(
+                  `thread-message-toolbar-container tw-sticky tw-top-[3.35rem] tw-z-[9] tw-mt-4 !tw-h-[3.125rem] tw-w-full`,
+                );
+                $($query[0]).before($container);
+              }
+
+              newContainers.push({
+                container: $container[0],
+                query: $query[0],
+                messageBlock: $messageBlock[0],
+                answer: $answer[0],
+                answerHeading: $answerHeading[0],
+              });
+
+              toggleVisibility({
+                bottomButtonBar: $messageBlock.find(
+                  DomSelectors.THREAD.MESSAGE.BOTTOM_BAR,
+                )[0],
+                index,
+                messageBlock: $messageBlock[0],
+              });
+
+              if (index === $messageBlocks.length - 1) {
+                updateContainers(newContainers);
+              }
             });
-
-            toggleVisibility({
-              bottomButtonBar: $messageBlock.find(
-                DomSelectors.THREAD.MESSAGE.BOTTOM_BAR,
-              )[0],
-              index,
-              messageBlock: $messageBlock[0],
-            });
-
-            if (index === $messageBlocks.length - 1) {
-              updateContainers(newContainers);
-            }
-          });
-        });
+          },
+        );
       }
 
       return () => {

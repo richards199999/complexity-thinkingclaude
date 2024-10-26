@@ -235,6 +235,8 @@ class WsHook {
     // "onmessage"
     const originalMessage = instance.onmessage;
     instance.onmessage = (event: MessageEvent) => {
+      if (typeof event.data !== "string") return;
+
       webpageMessenger.sendMessage({
         event: "webSocketEvent",
         payload: { event: "message", payload: event.data },
@@ -351,10 +353,7 @@ class WsHook {
     const self = this;
 
     WebSocket.prototype.send = function (data: any): void {
-      if (
-        !this.url.includes("src=complexity") &&
-        !self.capturedInstances.has(this)
-      ) {
+      if (!this.url.includes("src=cplx") && !self.capturedInstances.has(this)) {
         //! important: must restore the original send method BEFORE capturing the instance
         // WebSocket.prototype.send = self.webSocketOriginalSend;
 
@@ -377,42 +376,47 @@ class InternalWsInstance {
   isReady: boolean = false;
 
   private constructor() {
-    this.socket = this.handShake();
+    this.socket = null;
   }
 
-  static getInstance(): InternalWsInstance {
+  static async getInstance(): Promise<InternalWsInstance> {
     if (!InternalWsInstance.instance) {
       InternalWsInstance.instance = new InternalWsInstance();
+      InternalWsInstance.instance.socket =
+        await InternalWsInstance.instance.handShake();
     }
     return InternalWsInstance.instance;
   }
 
-  private handShake(): Socket["io"]["engine"] | null {
-    try {
-      const socket = io("wss://www.perplexity.ai/?src=complexity", {
-        transports: ["websocket"],
-      }).io.engine;
+  private handShake(): Promise<Socket["io"]["engine"] | null> {
+    return new Promise((resolve, reject) => {
+      try {
+        const socket = io("wss://www.perplexity.ai/?src=cplx", {
+          transports: ["websocket"],
+          reconnection: false,
+        }).io.engine;
 
-      socket.on("message", (message: string) => {
-        if (message.startsWith(`0{"sid":"`)) {
-          this.isReady = true;
-        }
+        socket.on("message", (message: unknown) => {
+          if (typeof message === "string" && message.includes(`0{"sid":"`)) {
+            this.isReady = true;
+            return resolve(socket);
+          }
 
-        webpageMessenger.sendMessage({
-          event: "webSocketEvent",
-          payload: {
-            event: "message",
-            payload: "4" + message,
-            isInternal: true,
-          },
+          webpageMessenger.sendMessage({
+            event: "webSocketEvent",
+            payload: {
+              event: "message",
+              payload: "4" + message,
+              isInternal: true,
+            },
+          });
         });
-      });
-
-      return socket;
-    } catch (error) {
-      console.error("Error creating socket:", error);
-      return null;
-    }
+      } catch (error) {
+        console.error("Error creating socket:", error);
+        reject(error);
+        return null;
+      }
+    });
   }
 
   getSocket(): Socket["io"]["engine"] | null {
@@ -429,13 +433,19 @@ class InternalWsInstance {
       payload: { event: "send", payload: message },
     });
   }
+
+  async restartInstance(): Promise<void> {
+    this.socket?.close();
+    this.isReady = false;
+    this.socket = await this.handShake();
+  }
 }
 
-mainWorldExec(() => {
+mainWorldExec(async () => {
   const wsInstance = WsHook.getInstance();
-  const ownWsInstance = InternalWsInstance.getInstance();
-
   wsInstance.initialize();
+
+  const ownWsInstance = await InternalWsInstance.getInstance();
 
   webpageMessenger.onMessage("sendWebSocketMessage", async (data) => {
     if (ownWsInstance.getSocket()?.readyState === "open") {

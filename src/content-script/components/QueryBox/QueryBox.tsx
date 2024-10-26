@@ -5,6 +5,7 @@ import {
 } from "@/content-script/components/QueryBox/context";
 import ImageModelSelector from "@/content-script/components/QueryBox/ImageModelSelector";
 import useFetchUserSettings from "@/content-script/hooks/useFetchUserSettings";
+import { validateHasActivePplxSub } from "@/content-script/hooks/useHasActivePplxSub";
 import useInitQueryBoxSessionStore from "@/content-script/hooks/useInitQueryBoxSessionStore";
 import useQueryBoxObserver from "@/content-script/hooks/useQueryBoxObserver";
 import useCplxGeneralSettings from "@/cplx-user-settings/hooks/useCplxGeneralSettings";
@@ -23,12 +24,10 @@ export default function QueryBox() {
     error: userSettingsFetchError,
   } = useFetchUserSettings();
 
-  useInitQueryBoxSessionStore();
-
   const hasActivePplxSub =
-    userSettings &&
-    (userSettings.subscriptionStatus === "active" ||
-      userSettings.subscriptionStatus === "trialing");
+    userSettings && validateHasActivePplxSub(userSettings);
+
+  useInitQueryBoxSessionStore();
 
   const [containers, setContainers] = useState<HTMLElement[]>([]);
   const [followUpContainers, setFollowUpContainers] = useState<HTMLElement[]>(

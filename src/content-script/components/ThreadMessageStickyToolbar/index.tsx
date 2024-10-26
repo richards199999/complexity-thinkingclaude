@@ -1,5 +1,6 @@
 import debounce from "lodash/debounce";
 import {
+  Fragment,
   useCallback,
   useDeferredValue,
   useEffect,
@@ -9,8 +10,11 @@ import {
 } from "react";
 import { Updater, useImmer } from "use-immer";
 
+import appConfig from "@/app.config";
 import Toolbar from "@/content-script/components/ThreadMessageStickyToolbar/Toolbar";
-import useThreadMessageStickyToolbarObserver from "@/content-script/hooks/useThreadMessageStickyToolbarObserver";
+import TtsButton from "@/content-script/components/ThreadMessageStickyToolbar/TtsButton";
+import useThreadMessageStickyToolbarObserver from "@/content-script/components/ThreadMessageStickyToolbar/useThreadMessageStickyToolbarObserver";
+import useHasActivePplxSub from "@/content-script/hooks/useHasActivePplxSub";
 import Portal from "@/shared/components/Portal";
 import { DomSelectors } from "@/utils/DomSelectors";
 import UiUtils from "@/utils/UiUtils";
@@ -21,6 +25,7 @@ export type Container = {
   query: Element;
   container: Element;
   answer: Element;
+  answerHeading: Element;
 };
 
 export type ContainerStates = {
@@ -48,7 +53,8 @@ const isChanged = (prev: Container[], next: Container[]): boolean => {
       prev[i].messageBlock !== next[i].messageBlock ||
       prev[i].query !== next[i].query ||
       prev[i].container !== next[i].container ||
-      prev[i].answer !== next[i].answer
+      prev[i].answer !== next[i].answer ||
+      prev[i].answerHeading !== next[i].answerHeading
     ) {
       return true;
     }
@@ -57,6 +63,8 @@ const isChanged = (prev: Container[], next: Container[]): boolean => {
 };
 
 export default function ThreadMessageStickyToolbar() {
+  const { hasActivePplxSub } = useHasActivePplxSub();
+
   const [containers, setContainers] = useState<Container[]>([]);
   const deferredContainers = useDeferredValue(containers);
   const [containersStates, setContainersStates] = useImmer<ContainerStates[]>(
@@ -115,17 +123,24 @@ export default function ThreadMessageStickyToolbar() {
       if (containers[index] == null) return null;
 
       return (
-        <Portal key={index} container={container.container as HTMLElement}>
-          <Toolbar
-            containers={containers}
-            containersStates={containersStates}
-            containerIndex={index}
-            setContainersStates={setContainersStates}
-          />
-        </Portal>
+        <Fragment key={index}>
+          <Portal container={container.container as HTMLElement}>
+            <Toolbar
+              containers={containers}
+              containersStates={containersStates}
+              containerIndex={index}
+              setContainersStates={setContainersStates}
+            />
+          </Portal>
+          {appConfig.BROWSER === "chrome" && hasActivePplxSub && (
+            <Portal container={container.answerHeading as HTMLElement}>
+              <TtsButton containers={containers} containerIndex={index} />
+            </Portal>
+          )}
+        </Fragment>
       );
     },
-    [containers, containersStates, setContainersStates],
+    [containers, containersStates, hasActivePplxSub, setContainersStates],
   );
 
   return deferredContainers.map(renderToolbar);

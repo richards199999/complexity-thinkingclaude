@@ -1,7 +1,7 @@
 import { produce } from "immer";
 
+import useCplxUserSettings from "@/cplx-user-settings/hooks/useCplxUserSettings";
 import { CplxUserSettings } from "@/cplx-user-settings/types/cplx-user-settings.types";
-import useCplxUserSettings from "@/shared/hooks/useCplxUserSettings";
 
 export default function useCplxGeneralSettings() {
   const {

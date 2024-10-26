@@ -2,6 +2,7 @@ import generalSettings, {
   PopupSetting,
 } from "@/cplx-user-settings/GeneralSettings";
 import useCplxGeneralSettings from "@/cplx-user-settings/hooks/useCplxGeneralSettings";
+import useCplxUserSettings from "@/cplx-user-settings/hooks/useCplxUserSettings";
 import {
   CplxUserSettings,
   GeneralSettingsKeys,
@@ -9,7 +10,6 @@ import {
 import Separator from "@/shared/components/Separator";
 import Switch from "@/shared/components/Switch";
 import Tooltip from "@/shared/components/Tooltip";
-import useCplxUserSettings from "@/shared/hooks/useCplxUserSettings";
 import { cn } from "@/utils/cn";
 import { compareVersions } from "@/utils/utils";
 import packageData from "~/package.json";

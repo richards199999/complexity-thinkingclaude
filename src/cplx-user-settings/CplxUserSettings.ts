@@ -15,6 +15,7 @@ export default class CplxUserSettings {
     customTheme: {},
     defaultFocusMode: "internet",
     defaultProSearchState: false,
+    defaultTtsVoice: "Mike",
     generalSettings: {
       queryBoxSelectors: {
         spaceNFocus: false,

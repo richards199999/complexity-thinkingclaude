@@ -1,7 +1,7 @@
 {
   "name": "complexity",
   "displayName": "Complexity - Perplexity AI Supercharged",
-  "version": "0.0.4.8",
+  "version": "0.0.5.1",
   "author": "pnd280",
   "description": "⚡ Supercharge your Perplexity AI",
   "type": "module",
@@ -38,6 +38,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "dompurify": "^3.1.7",
+    "engine.io-parser": "^5.2.3",
     "immer": "^10.1.1",
     "jquery": "^3.7.1",
     "lodash": "^4.17.21",

@@ -1,7 +1,7 @@
 import { LanguageModel } from "@/content-script/components/QueryBox";
 import { webpageMessenger } from "@/content-script/main-world/webpage-messenger";
 import { mainWorldExec, mainWorldOnly } from "@/utils/hof";
-import { getReactFiberKey, jsonUtils } from "@/utils/utils";
+import { getReactFiberKey, getReactPropsKey, jsonUtils } from "@/utils/utils";
 
 export type ReactNodeAction = keyof typeof actions;
 export type ReactNodeActionReturnType = {
@@ -39,6 +39,10 @@ const actions = {
         ?.memoizedProps.children.props.result.display_model;
     },
   ),
+  getMessageBackendUuid: mainWorldOnly((messageBlock: Element): string => {
+    return (messageBlock as any)[getReactPropsKey(messageBlock)]?.children
+      ?.props?.result?.backend_uuid;
+  }),
 } as const;
 
 mainWorldExec(() => {

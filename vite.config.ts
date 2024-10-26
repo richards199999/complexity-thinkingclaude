@@ -14,7 +14,7 @@ import appConfig from "./src/app.config";
 export default defineConfig(() => ({
   base: "./",
   build: {
-    target: ["chrome88", "edge88", "firefox109"],
+    target: ["chrome89", "edge89", "firefox109"],
     emptyOutDir: true,
     rollupOptions: {
       output: {

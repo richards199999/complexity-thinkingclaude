@@ -23,9 +23,9 @@ const DomSelectors = {
         ANSWER: ".relative.default.font-sans.text-base",
         /** The answer heading */
         ANSWER_HEADING:
-          '.mb-sm.flex.w-full.items-center.justify-between:contains("Answer")',
+          '.mb-sm.flex.w-full.items-center.justify-between:not(:has(svg[data-icon="sources"]))',
         SOURCE_HEADING:
-          '.mb-sm.flex.w-full.items-center.justify-between:contains("Sources")',
+          '.mb-sm.flex.w-full.items-center.justify-between:has(svg[data-icon="sources"])',
       },
       VISUAL_COL_CHILD: {
         IMAGE_GEN_POPOVER:
@@ -57,8 +57,7 @@ const DomSelectors = {
         '[location="thread"] .pointer-events-none.fixed.bottom-mobileNavHeight textarea[placeholder][autocomplete]',
       SPACE:
         '[location="space"] .max-w-threadWidth textarea[placeholder][autocomplete]',
-      ARBITRARY:
-        'textarea[placeholder][autocomplete]',
+      ARBITRARY: "textarea[placeholder][autocomplete]",
     },
     SUBMIT_BUTTON: 'button[aria-label="Submit"]',
     FORK_BUTTON: 'button svg[data-icon="code-fork"]',

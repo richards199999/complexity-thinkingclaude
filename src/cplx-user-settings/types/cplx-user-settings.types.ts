@@ -3,6 +3,7 @@ import * as z from "zod";
 import { FocusMode } from "@/content-script/components/QueryBox";
 import { focusModes } from "@/content-script/components/QueryBox/consts";
 import Canvas, { CanvasLang } from "@/utils/Canvas";
+import { TtsVoiceSchema } from "@/utils/tts";
 import packageData from "~/package.json";
 
 type WebAccessFocusCode = FocusMode["code"];
@@ -20,6 +21,7 @@ export const cplxUserSettingsSchema = z.object({
   isFirstVisit: z.boolean(),
   defaultFocusMode: WebAccessFocusSchema.nullable(),
   defaultProSearchState: z.boolean(),
+  defaultTtsVoice: TtsVoiceSchema,
   generalSettings: z.object({
     queryBoxSelectors: z.object({
       spaceNFocus: z.boolean(),

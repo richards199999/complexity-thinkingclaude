@@ -44,6 +44,9 @@ importers:
       dompurify:
         specifier: ^3.1.7
         version: 3.1.7
+      engine.io-parser:
+        specifier: ^5.2.3
+        version: 5.2.3
       immer:
         specifier: ^10.1.1
         version: 10.1.1

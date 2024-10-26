@@ -137,6 +137,8 @@ const DropdownMenuSubTrigger = forwardRef<
 ));
 DropdownMenuSubTrigger.displayName = "DropdownMenuSubTrigger";
 
+const DropdownMenuContext = Menu.Context;
+
 export {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -147,4 +149,5 @@ export {
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubTrigger,
+  DropdownMenuContext,
 };

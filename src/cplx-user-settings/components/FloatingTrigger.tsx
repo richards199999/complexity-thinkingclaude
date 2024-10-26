@@ -1,9 +1,9 @@
 import { HTMLAttributes } from "react";
 
 import useRouter from "@/content-script/hooks/useRouter";
+import useCplxUserSettings from "@/cplx-user-settings/hooks/useCplxUserSettings";
 import Cplx from "@/shared/components/icons/Cplx";
 import Tooltip from "@/shared/components/Tooltip";
-import useCplxUserSettings from "@/shared/hooks/useCplxUserSettings";
 import { cn } from "@/utils/cn";
 import { whereAmI } from "@/utils/utils";
 

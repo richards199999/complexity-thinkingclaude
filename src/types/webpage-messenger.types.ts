@@ -122,4 +122,7 @@ export interface EventHandlers {
     querySelector: string;
     action: ReactNodeAction;
   }): unknown;
+
+  textToSpeech(messageUuid: string): void;
+  stopTextToSpeech(): void;
 }

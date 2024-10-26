@@ -65,10 +65,19 @@ export default class GeneralSettings {
     },
     {
       id: "thread-message-sticky-toolbar",
-      label: "Thread message sticky toolbar",
+      label: "Better thread message toolbar",
       settingKey: "threadMessageStickyToolbar",
-      description: "Enable a sticky toolbar for your thread.",
-      versionRelease: "0.0.0.12",
+      description: (
+        <span>
+          An alternative (better) toolbar for quick actions on thread messages,{" "}
+          <span className="tw-font-bold tw-text-accent-foreground">
+            now including Text-to-speech
+          </span>
+          .
+        </span>
+      ),
+      versionRelease: "0.0.6.0",
+      experimental: true,
     },
     {
       id: "auto-refresh-session-timeout",
