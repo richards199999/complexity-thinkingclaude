@@ -23,6 +23,7 @@ import BlackForestLabs from "@/shared/components/icons/BlackForestLabsIcon";
 import MistralAiIcon from "@/shared/components/icons/MistralAiIcon";
 import PlaygroundAiIcon from "@/shared/components/icons/PlaygroundAiIcon";
 import StabilityAiIcon from "@/shared/components/icons/StabilityAiIcon";
+import XAiIcon from "@/shared/components/icons/xAi";
 
 export type LanguageModel = (typeof languageModels)[number];
 type Provider = (typeof languageModels)[number]["provider"];
@@ -38,6 +39,7 @@ export const languageModelIcons: Record<LanguageModel["code"], ReactNode> = {
   o1: <AiOutlineOpenAI />,
   gpt4o: <AiOutlineOpenAI />,
   gpt4: <AiOutlineOpenAI />,
+  grok: <XAiIcon />,
   llama_x_large: <SiPerplexity />,
   experimental: <SiPerplexity />,
   turbo: <SiPerplexity />,

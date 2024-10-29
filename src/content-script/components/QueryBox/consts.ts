@@ -33,6 +33,12 @@ export const languageModels = [
     provider: "OpenAI",
   },
   {
+    label: "Grok-2",
+    shortLabel: "Grok-2",
+    code: "grok",
+    provider: "xAI",
+  },
+  {
     label: "Sonar Huge",
     shortLabel: "Sonar XL",
     code: "llama_x_large",
