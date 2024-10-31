@@ -12,6 +12,7 @@ import { QueryBoxContext } from "@/content-script/components/QueryBox/context";
 import useFetchOrgSettings from "@/content-script/hooks/useFetchOrgSettings";
 import useFetchSpaceFiles from "@/content-script/hooks/useFetchSpaceFiles";
 import useFetchThreadInfo from "@/content-script/hooks/useFetchThreadInfo";
+import useRouter from "@/content-script/hooks/useRouter";
 import { useQueryBoxStore } from "@/content-script/session-store/query-box";
 import {
   Select,
@@ -25,7 +26,7 @@ import Tooltip from "@/shared/components/Tooltip";
 import { SpaceFilesApiResponse } from "@/types/pplx-api.types";
 import { isReactNode } from "@/types/utils.types";
 import UiUtils from "@/utils/UiUtils";
-import { parseUrl } from "@/utils/utils";
+import { parseUrl, whereAmI } from "@/utils/utils";
 
 export default function FocusSelector() {
   const queryBoxContext = useContext(QueryBoxContext);
@@ -41,9 +42,14 @@ export default function FocusSelector() {
     setFocusMode,
   } = queryBoxContext;
 
+  const location = whereAmI(useRouter().url);
+
+  const slug = parseUrl().pathname.split("/").pop() || "";
+
   const { data: threadInfo } = useFetchThreadInfo({
-    slug: parseUrl().pathname.split("/").pop() || "",
-    enabled: type === "follow-up",
+    slug,
+    enabled:
+      location === "thread" && type && slug !== "new" && type === "follow-up",
   });
 
   const currentFocusMode =

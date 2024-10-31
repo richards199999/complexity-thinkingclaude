@@ -391,8 +391,9 @@ class InternalWsInstance {
   private handShake(): Promise<Socket["io"]["engine"] | null> {
     return new Promise((resolve, reject) => {
       try {
-        const socket = io("wss://www.perplexity.ai/?src=cplx", {
-          transports: ["websocket"],
+        const socket = io("www.perplexity.ai/?src=cplx", {
+          transports: ["polling", "websocket"],
+          upgrade: true,
           reconnection: false,
         }).io.engine;
 
@@ -456,12 +457,13 @@ mainWorldExec(async () => {
   });
 
   webpageMessenger.onMessage("isWebSocketCaptured", async () => {
-    return wsInstance.getWebSocketInstance()?.readyState === 1;
+    return (
+      wsInstance.getWebSocketInstance()?.readyState === 1 ||
+      wsInstance.getLongPollingInstance()?.responseURL != null
+    );
   });
 
   webpageMessenger.onMessage("isInternalWebSocketInitialized", async () => {
-    return (
-      ownWsInstance.getSocket()?.readyState === "open" && ownWsInstance.isReady
-    );
+    return ownWsInstance.isReady;
   });
 })();

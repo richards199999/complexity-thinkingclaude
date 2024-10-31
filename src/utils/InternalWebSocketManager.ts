@@ -23,13 +23,16 @@ class InternalWebSocketManager {
     return new Promise((resolve, reject) => {
       if (isMainWorldContext()) throw new Error("Not allowed in main world");
 
-      const socket = io(`wss://www.perplexity.ai/${id ? `?src=${id}` : ""}`, {
-        transports: ["websocket"],
+      const socket = io(`www.perplexity.ai/${id ? `?src=${id}` : ""}`, {
+        transports: ["polling", "websocket"],
+        upgrade: true,
         reconnection: false,
       }).io.engine;
 
       const messageHandler = (message: unknown) => {
         if (typeof message !== "string") return;
+
+        console.log("message", message);
 
         const decodedData = decodePacket(message);
         const sid = decodedData.data.match(/^\{"sid":"(.+)"\}$/)?.[1];
