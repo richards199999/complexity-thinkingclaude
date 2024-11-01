@@ -1,4 +1,4 @@
-import { LanguageModel, FocusMode } from "@/content-script/components/QueryBox";
+import { LanguageModel } from "@/content-script/components/QueryBox";
 import {
   mainQueryBoxStore,
   followUpQueryBoxStore,
@@ -144,124 +144,143 @@ export default class WebpageMessageInterceptor {
           return { match: false };
         }
 
+        const isSpaceNFocusSelectorEnabled =
+          CplxUserSettings.get().generalSettings.queryBoxSelectors.spaceNFocus;
+        const selectedSpaceUuid = queryBoxStore.getState().selectedSpaceUuid;
+        const selectedLanguageModel =
+          queryBoxStore.getState().selectedLanguageModel;
+        const focusMode = mainQueryBoxStore.getState().focusMode;
+        const querySource = parsedPayload.data[1].query_source;
+
         const newModelPreference =
           CplxUserSettings.get().generalSettings.queryBoxSelectors
             .languageModel && parsedPayload.data?.[1].query_source !== "retry"
-            ? queryBoxStore.getState().selectedLanguageModel
+            ? selectedLanguageModel
             : parsedPayload.data[1].model_preference;
-
-        const focusMode = mainQueryBoxStore.getState().focusMode;
-
-        let newSearchFocus: FocusMode["code"] = CplxUserSettings.get()
-          .generalSettings.queryBoxSelectors.spaceNFocus
+        let newSearchFocus = CplxUserSettings.get().generalSettings
+          .queryBoxSelectors.spaceNFocus
           ? focusMode
           : parsedPayload.data[1].search_focus;
+        let newSources: string[] = parsedPayload.data[1].sources;
 
-        const isSpaceNFocusSelectorEnabled =
-          CplxUserSettings.get().generalSettings.queryBoxSelectors.spaceNFocus;
-        const isHomeOrModal =
-          parsedPayload.data[1].query_source === "home" ||
-          parsedPayload.data[1].query_source === "modal";
-        const isFromCollection =
-          parsedPayload.data[1].query_source === "collection";
-        const isFollowUpQuery =
-          parsedPayload.data[1].query_source === "followup" ||
-          parsedPayload.data[1].query_source === "edit" ||
-          parsedPayload.data[1].query_source === "retry";
+        // console.log("before:", parsedPayload.data[1]);
 
-        let newTargetCollectionUuid = isSpaceNFocusSelectorEnabled
-          ? isHomeOrModal
-            ? queryBoxStore.getState().selectedSpaceUuid
-            : parsedPayload.data[1].target_collection_uuid
-          : isFromCollection
-            ? parsedPayload.data[1].target_collection_uuid
-            : undefined;
+        switch (querySource) {
+          case "home":
+          case "modal":
+          case "collection": {
+            const includeSpaceFiles =
+              mainQueryBoxStore.getState().includeSpaceFiles;
+            const includeOrgFiles =
+              mainQueryBoxStore.getState().includeOrgFiles;
 
-        const selectedSpaceUuid = queryBoxStore.getState().selectedSpaceUuid;
+            if (includeOrgFiles) {
+              newSources ??= [];
+              newSources.push("org");
 
-        const includeSpaceFiles = (
-          isFollowUpQuery ? followUpQueryBoxStore : mainQueryBoxStore
-        ).getState().includeSpaceFiles;
+              // either "org" or "space" can be included at a time
+              newSources = newSources.filter((source) => source !== "space");
 
-        const includeOrgFiles = (
-          isFollowUpQuery ? followUpQueryBoxStore : mainQueryBoxStore
-        ).getState().includeOrgFiles;
-
-        let newQuerySource =
-          (parsedPayload.data[1].query_source === "home" ||
-            parsedPayload.data[1].query_source === "modal") &&
-          selectedSpaceUuid
-            ? "collection"
-            : parsedPayload.data[1].query_source;
-
-        let sources: string[] = parsedPayload.data[1].sources;
-        let newMode = parsedPayload.data[1].mode;
-
-        if (parsedPayload.data[1].query_source === "retry") {
-          newQuerySource = "edit";
-        }
-
-        if (
-          (!isFollowUpQuery && includeOrgFiles) ||
-          (isFromCollection && (includeSpaceFiles || includeOrgFiles))
-        ) {
-          newMode = "copilot";
-          if (newSearchFocus === "writing") newSearchFocus = "internet";
-        }
-
-        if (isSpaceNFocusSelectorEnabled && !isFromCollection) {
-          const currentThreadInfo = queryClient.getQueryData<
-            ThreadMessageApiResponse[]
-          >(["threadInfo", parseUrl().pathname.split("/").pop() || ""]);
-
-          const currentSpaceFiles =
-            queryClient.getQueryData<SpaceFilesApiResponse>([
-              "space-files",
-              newTargetCollectionUuid,
-            ]);
-
-          sources = [];
-
-          if (focusMode !== "writing") sources.push("web");
-
-          if (includeSpaceFiles) {
-            if (currentThreadInfo && currentThreadInfo[0].collection_info) {
-              newTargetCollectionUuid =
-                currentThreadInfo[0].collection_info?.uuid;
+              if (newSearchFocus !== "writing") newSources.push("web");
+              if (newSearchFocus === "writing") newSearchFocus = "internet";
             }
 
-            if (currentSpaceFiles && currentSpaceFiles.files.length > 0) {
-              sources.push("space");
-              newMode = "copilot";
-            }
-          }
-
-          if (includeOrgFiles) {
-            sources.push("org");
-          }
-
-          if (includeSpaceFiles || includeOrgFiles) {
             if (
-              newSearchFocus === "writing" &&
-              currentSpaceFiles &&
-              currentSpaceFiles.files.length > 0
-            )
-              newSearchFocus = "internet";
+              selectedSpaceUuid &&
+              includeSpaceFiles &&
+              querySource !== "collection"
+            ) {
+              const currentSpaceFiles =
+                queryClient.getQueryData<SpaceFilesApiResponse>([
+                  "space-files",
+                  selectedSpaceUuid,
+                ]);
+
+              if (currentSpaceFiles && currentSpaceFiles.files.length > 0) {
+                newSources ??= [];
+                newSources.push("space");
+
+                if (newSearchFocus !== "writing") newSources.push("web");
+                if (newSearchFocus === "writing") {
+                  newSearchFocus = "internet";
+                  newSources = newSources.filter((source) => source !== "web");
+                }
+              }
+            }
+
+            parsedPayload.data[1] = {
+              ...parsedPayload.data[1],
+              model_preference: newModelPreference,
+              search_focus: newSearchFocus,
+              query_source: selectedSpaceUuid ? "collection" : querySource,
+              target_collection_uuid:
+                isSpaceNFocusSelectorEnabled && selectedSpaceUuid
+                  ? selectedSpaceUuid
+                  : parsedPayload.data[1].target_collection_uuid,
+              sources: Array.from(new Set(newSources)),
+            };
+
+            break;
           }
+
+          case "followup":
+          case "edit":
+          case "retry": {
+            const includeSpaceFiles =
+              followUpQueryBoxStore.getState().includeSpaceFiles;
+            const includeOrgFiles =
+              followUpQueryBoxStore.getState().includeOrgFiles;
+            let newQuerySource = querySource;
+
+            if (includeOrgFiles) {
+              if (!Array.isArray(newSources)) newSources = [];
+              newSources.push("org");
+            }
+
+            const currentThreadInfo = queryClient.getQueryData<
+              ThreadMessageApiResponse[]
+            >(["threadInfo", parseUrl().pathname.split("/").pop() || ""]);
+
+            let newTargetCollectionUuid =
+              parsedPayload.data[1].target_collection_uuid;
+
+            if (currentThreadInfo && currentThreadInfo[0].collection_info) {
+              const currentSpaceFiles =
+                queryClient.getQueryData<SpaceFilesApiResponse>([
+                  "space-files",
+                  currentThreadInfo[0].collection_info?.uuid,
+                ]);
+
+              if (
+                currentSpaceFiles &&
+                currentSpaceFiles.files.length > 0 &&
+                includeSpaceFiles
+              ) {
+                if (!Array.isArray(newSources)) newSources = [];
+                newSources.push("space");
+                newTargetCollectionUuid =
+                  currentThreadInfo[0].collection_info?.uuid;
+
+                if (newQuerySource === "retry") newQuerySource = "edit";
+              }
+            }
+
+            parsedPayload.data[1] = {
+              ...parsedPayload.data[1],
+              model_preference: newModelPreference,
+              query_source: newQuerySource,
+              target_collection_uuid: newTargetCollectionUuid,
+              sources: Array.from(new Set(newSources)),
+            };
+
+            break;
+          }
+
+          default:
+            return { match: false };
         }
 
-        parsedPayload.data[1] = {
-          ...parsedPayload.data[1],
-          query_source: newQuerySource,
-          model_preference: newModelPreference,
-          mode: newMode,
-          // dont override search focus for follow-up queries (doesnt work anymore)
-          search_focus: isFollowUpQuery
-            ? parsedPayload.data[1].search_focus
-            : newSearchFocus,
-          target_collection_uuid: newTargetCollectionUuid,
-          sources,
-        };
+        // console.log("after:", parsedPayload.data[1]);
 
         return {
           match: parsedPayload.event === "perplexity_ask",

@@ -12,6 +12,7 @@ module.exports = {
   parser: "@typescript-eslint/parser",
   plugins: ["react", "react-refresh", "unicorn", "@limegrass/import-alias"],
   rules: {
+    "no-fallthrough": "error",
     "react-refresh/only-export-components": [
       "warn",
       { allowConstantExport: true },

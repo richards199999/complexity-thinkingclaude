@@ -76,10 +76,6 @@ export default function FocusSelector() {
   useEffect(() => {
     if (currentSpaceUuid && files && files.length) {
       setIncludeSpaceFiles?.(true);
-
-      enableProSearch();
-
-      return;
     }
   }, [currentSpaceUuid, files, setIncludeSpaceFiles]);
 
@@ -192,10 +188,6 @@ function MiscOptions({ files }: { files?: SpaceFilesApiResponse["files"] }) {
             onClick={(e) => {
               e.stopPropagation();
               setIncludeOrgFiles(!includeOrgFiles);
-
-              if (!includeOrgFiles) {
-                enableProSearch();
-              }
             }}
           >
             <div className="tw-flex tw-items-center tw-gap-2">
@@ -226,10 +218,6 @@ function MiscOptions({ files }: { files?: SpaceFilesApiResponse["files"] }) {
             onClick={(e) => {
               e.stopPropagation();
               setIncludeSpaceFiles(!includeSpaceFiles);
-
-              if (!includeSpaceFiles) {
-                enableProSearch();
-              }
             }}
           >
             <div className="tw-flex tw-items-center tw-gap-2">
