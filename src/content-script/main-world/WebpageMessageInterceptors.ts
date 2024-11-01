@@ -7,6 +7,7 @@ import { webpageMessenger } from "@/content-script/main-world/webpage-messenger"
 import { queryBoxStore } from "@/content-script/session-store/query-box";
 import CplxUserSettings from "@/cplx-user-settings/CplxUserSettings";
 import {
+  SpaceFilesApiResponse,
   SpacesApiResponse,
   ThreadMessageApiResponse,
   UserAiProfileApiResponse,
@@ -122,8 +123,6 @@ export default class WebpageMessageInterceptor {
   static alterQueries() {
     webpageMessenger.addInterceptor({
       matchCondition: (messageData: MessageData<any>) => {
-        // TODO: Refactor this mess
-
         const webSocketMessageData = messageData as MessageData<
           WebSocketEventData | LongPollingEventData
         >;
@@ -151,26 +150,34 @@ export default class WebpageMessageInterceptor {
             ? queryBoxStore.getState().selectedLanguageModel
             : parsedPayload.data[1].model_preference;
 
-        let newSearchFocus: FocusMode["code"] = CplxUserSettings.get()
-          .generalSettings.queryBoxSelectors.spaceNFocus
-          ? mainQueryBoxStore.getState().focusMode
-          : parsedPayload.data[1].search_focus;
-
-        let newTargetCollectionUuid = CplxUserSettings.get().generalSettings
-          .queryBoxSelectors.spaceNFocus
-          ? parsedPayload.data[1].query_source === "home" ||
-            parsedPayload.data[1].query_source === "modal"
-            ? queryBoxStore.getState().selectedSpaceUuid
-            : parsedPayload.data[1].target_collection_uuid
-          : undefined;
-
-        const selectedSpaceUuid = queryBoxStore.getState().selectedSpaceUuid;
         const focusMode = mainQueryBoxStore.getState().focusMode;
 
+        let newSearchFocus: FocusMode["code"] = CplxUserSettings.get()
+          .generalSettings.queryBoxSelectors.spaceNFocus
+          ? focusMode
+          : parsedPayload.data[1].search_focus;
+
+        const isSpaceNFocusSelectorEnabled =
+          CplxUserSettings.get().generalSettings.queryBoxSelectors.spaceNFocus;
+        const isHomeOrModal =
+          parsedPayload.data[1].query_source === "home" ||
+          parsedPayload.data[1].query_source === "modal";
+        const isFromCollection =
+          parsedPayload.data[1].query_source === "collection";
         const isFollowUpQuery =
           parsedPayload.data[1].query_source === "followup" ||
           parsedPayload.data[1].query_source === "edit" ||
           parsedPayload.data[1].query_source === "retry";
+
+        let newTargetCollectionUuid = isSpaceNFocusSelectorEnabled
+          ? isHomeOrModal
+            ? queryBoxStore.getState().selectedSpaceUuid
+            : parsedPayload.data[1].target_collection_uuid
+          : isFromCollection
+            ? parsedPayload.data[1].target_collection_uuid
+            : undefined;
+
+        const selectedSpaceUuid = queryBoxStore.getState().selectedSpaceUuid;
 
         const includeSpaceFiles = (
           isFollowUpQuery ? followUpQueryBoxStore : mainQueryBoxStore
@@ -188,24 +195,44 @@ export default class WebpageMessageInterceptor {
             : parsedPayload.data[1].query_source;
 
         let sources: string[] = parsedPayload.data[1].sources;
+        let newMode = parsedPayload.data[1].mode;
+
+        if (parsedPayload.data[1].query_source === "retry") {
+          newQuerySource = "edit";
+        }
 
         if (
-          CplxUserSettings.get().generalSettings.queryBoxSelectors.spaceNFocus
+          (!isFollowUpQuery && includeOrgFiles) ||
+          (isFromCollection && (includeSpaceFiles || includeOrgFiles))
         ) {
+          newMode = "copilot";
+          if (newSearchFocus === "writing") newSearchFocus = "internet";
+        }
+
+        if (isSpaceNFocusSelectorEnabled && !isFromCollection) {
+          const currentThreadInfo = queryClient.getQueryData<
+            ThreadMessageApiResponse[]
+          >(["threadInfo", parseUrl().pathname.split("/").pop() || ""]);
+
+          const currentSpaceFiles =
+            queryClient.getQueryData<SpaceFilesApiResponse>([
+              "space-files",
+              newTargetCollectionUuid,
+            ]);
+
           sources = [];
 
           if (focusMode !== "writing") sources.push("web");
 
           if (includeSpaceFiles) {
-            sources.push("space");
-
-            const currentThreadInfo = queryClient.getQueryData<
-              ThreadMessageApiResponse[]
-            >(["threadInfo", parseUrl().pathname.split("/").pop() || ""]);
-
             if (currentThreadInfo && currentThreadInfo[0].collection_info) {
               newTargetCollectionUuid =
                 currentThreadInfo[0].collection_info?.uuid;
+            }
+
+            if (currentSpaceFiles && currentSpaceFiles.files.length > 0) {
+              sources.push("space");
+              newMode = "copilot";
             }
           }
 
@@ -214,12 +241,12 @@ export default class WebpageMessageInterceptor {
           }
 
           if (includeSpaceFiles || includeOrgFiles) {
-            if (newSearchFocus === "writing") newSearchFocus = "internet";
-
-            // TODO: Remove this temp fix
-            if (parsedPayload.data[1].query_source === "retry") {
-              newQuerySource = "edit";
-            }
+            if (
+              newSearchFocus === "writing" &&
+              currentSpaceFiles &&
+              currentSpaceFiles.files.length > 0
+            )
+              newSearchFocus = "internet";
           }
         }
 
@@ -227,6 +254,7 @@ export default class WebpageMessageInterceptor {
           ...parsedPayload.data[1],
           query_source: newQuerySource,
           model_preference: newModelPreference,
+          mode: newMode,
           // dont override search focus for follow-up queries (doesnt work anymore)
           search_focus: isFollowUpQuery
             ? parsedPayload.data[1].search_focus
