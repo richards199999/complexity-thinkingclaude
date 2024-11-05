@@ -9,6 +9,12 @@ export const languageModels = [
     provider: "Anthropic",
   },
   {
+    label: "Claude 3.5 Haiku",
+    shortLabel: "Haiku",
+    code: "claude35haiku",
+    provider: "Anthropic",
+  },
+  {
     label: "Claude 3 Opus",
     shortLabel: "Opus",
     code: "claude3opus",

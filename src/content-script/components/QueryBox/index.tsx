@@ -35,6 +35,7 @@ type GroupedLanguageModelsByProvider = [
 
 export const languageModelIcons: Record<LanguageModel["code"], ReactNode> = {
   claude2: <SiAnthropic />,
+  claude35haiku: <SiAnthropic />,
   claude3opus: <SiAnthropic />,
   o1: <AiOutlineOpenAI />,
   gpt4o: <AiOutlineOpenAI />,
