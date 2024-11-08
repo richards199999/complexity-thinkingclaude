@@ -48,7 +48,7 @@ const DomSelectors = {
     },
   },
   HOME: {
-    SLOGAN: ".mb-lg.md\\:text-center.pb-xs.md\\:text-center",
+    SLOGAN: ".mb-lg.md\\:text-center.pb-xs.md\\:text-center>div:last-child>span",
   },
   QUERY_BOX: {
     TEXTAREA: {

@@ -1,5 +1,5 @@
 /* Slogan fade in */
-.mb-lg.md\:text-center.pb-xs.md\:text-center {
+.mb-lg.md\:text-center.pb-xs.md\:text-center>div:last-child>span {
   transition         : all;
   transition-duration: 0.3s;
   opacity            : 0;
