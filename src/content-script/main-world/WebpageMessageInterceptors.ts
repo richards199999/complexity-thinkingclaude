@@ -208,6 +208,12 @@ export default class WebpageMessageInterceptor {
               }
             }
 
+            let filteredSources: string[] | null = Array.from(
+              new Set(newSources),
+            );
+
+            if (filteredSources.length === 0) filteredSources = null;
+
             parsedPayload.data[1] = {
               ...parsedPayload.data[1],
               model_preference: newModelPreference,
@@ -217,7 +223,7 @@ export default class WebpageMessageInterceptor {
                 isSpaceNFocusSelectorEnabled && selectedSpaceUuid
                   ? selectedSpaceUuid
                   : parsedPayload.data[1].target_collection_uuid,
-              sources: Array.from(new Set(newSources)),
+              sources: filteredSources,
             };
 
             break;
@@ -265,12 +271,18 @@ export default class WebpageMessageInterceptor {
               }
             }
 
+            let filteredSources: string[] | null = Array.from(
+              new Set(newSources),
+            );
+
+            if (filteredSources.length === 0) filteredSources = null;
+
             parsedPayload.data[1] = {
               ...parsedPayload.data[1],
               model_preference: newModelPreference,
               query_source: newQuerySource,
               target_collection_uuid: newTargetCollectionUuid,
-              sources: Array.from(new Set(newSources)),
+              sources: filteredSources,
             };
 
             break;
