@@ -174,6 +174,13 @@ export default class WebpageMessageInterceptor {
             const includeOrgFiles =
               mainQueryBoxStore.getState().includeOrgFiles;
 
+            if (
+              querySource === "collection" &&
+              !["writing", "internet"].includes(newSearchFocus)
+            ) {
+              newSearchFocus = "internet";
+            }
+
             if (includeOrgFiles) {
               newSources ??= [];
               newSources.push("org");
@@ -185,11 +192,7 @@ export default class WebpageMessageInterceptor {
               if (newSearchFocus === "writing") newSearchFocus = "internet";
             }
 
-            if (
-              selectedSpaceUuid &&
-              includeSpaceFiles &&
-              querySource !== "collection"
-            ) {
+            if (selectedSpaceUuid && includeSpaceFiles) {
               const currentSpaceFiles =
                 queryClient.getQueryData<SpaceFilesApiResponse>([
                   "space-files",
