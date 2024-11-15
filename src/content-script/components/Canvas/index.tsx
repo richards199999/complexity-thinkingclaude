@@ -13,6 +13,7 @@ export const canvasComponents: CanvasComponents = {
   mermaid: <MermaidCanvas />,
   html: <HtmlCanvas />,
   scratchpad: <MarkdownCanvas />,
+  claudethinking: <MarkdownCanvas />,
 };
 
 type CanvasPlaceholders = Record<
@@ -48,5 +49,13 @@ export const canvasPlaceholders: CanvasPlaceholders = {
     icon: (
       <FaBrain className="tw-size-6 tw-text-muted-foreground tw-transition-colors" />
     ),
+  },
+  claudethinking: {
+      title: "Thinking Claude",
+      description: "Click to see Claude's inner monologue",
+      loadingPlaceholder: "Claude is thinking...",
+      icon: (
+        <FaBrain className="tw-size-6 tw-text-muted-foreground tw-transition-colors" />
+      ),
   },
 };

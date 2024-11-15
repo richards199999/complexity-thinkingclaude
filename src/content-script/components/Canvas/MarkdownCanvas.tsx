@@ -16,7 +16,7 @@ export default function MarkdownCanvas() {
 
     const $pre = $(`#${preBlockId}`);
 
-    if ((MarkdownBlockUtils.getLang($pre) as CanvasLang) !== "scratchpad")
+    if ((MarkdownBlockUtils.getLang($pre) as CanvasLang) !== "scratchpad" || "claudethinking")
       return;
 
     const code = await MarkdownBlockUtils.extractCodeFromPreReactNode($pre[0]);
